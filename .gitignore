@@ -1,0 +1,6 @@
+node_modules/
+dist/
+tsconfig.tsbuildinfo
+.verdent/
+*.local
+.DS_Store
