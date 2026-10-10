@@ -1,0 +1,52 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          VITE_BASE_PATH: /peace-chat/
+          VITE_SUPABASE_URL: https://supabase-api-prod.verdent.ai/p/p6db467b7e8f28b73b727
+          VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoyMTA3MjE5ODAwLCJpYXQiOjE3OTE2MDA2MDAsImlzcyI6InN1cGFiYXNlIiwicHJvamVjdF9yZWYiOiJwNmRiNDY3YjdlOGYyOGI3MjciLCJyb2xlIjoiYW5vbiJ9.JkvBeGwXVxcwov0zd3JWDUqWzdL0RKM9d-UPqW7d6w0
+          VITE_VERDENT_OAUTH_INITIATE_URL: https://cloud-oauth.verdent.ai/app/initiate
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
